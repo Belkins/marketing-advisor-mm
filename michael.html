@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Evaluator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .hidden { display: none; }
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen p-6">
+    <div class="max-w-4xl mx-auto">
+        <h1 class="text-center text-2xl font-bold text-gray-900">Marketing Strategy Evaluator</h1>
+        <p class="text-center text-gray-600 mb-6">Analyze your marketing strategy's effectiveness</p>
+
+        <!-- Input -->
+        <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+            <textarea id="advice" rows="4" class="w-full p-3 border rounded-lg" placeholder="Describe your marketing strategy..."></textarea>
+            <button onclick="evaluateAdvice()" class="mt-4 w-full bg-indigo-600 text-white py-2 rounded-lg">Analyze Strategy</button>
+        </div>
+
+        <!-- Results -->
+        <div id="result" class="hidden fade-in">
+            <!-- Score -->
+            <div class="bg-white p-6 text-center rounded-lg shadow-md mb-6">
+                <h2 class="text-xl font-bold">Overall Score</h2>
+                <p id="overallScore" class="text-4xl font-bold text-indigo-600"></p>
+            </div>
+
+            <!-- Radar Chart -->
+            <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+                <h2 class="text-lg font-bold">Strategy Radar</h2>
+                <canvas id="radarChart"></canvas>
+            </div>
+
+            <!-- Feedback -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-bold text-green-600">Strengths</h3>
+                    <ul id="strengths" class="list-disc pl-5 text-gray-600"></ul>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md">
+                    <h3 class="text-lg font-bold text-red-600">Improvements</h3>
+                    <ul id="improvements" class="list-disc pl-5 text-gray-600"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let radarChart;
+        const categories = ['Audience', 'Goals', 'Strategy', 'Data', 'Value', 'Channels'];
+        const keywords = {
+            'audience': 0, 'segment': 0, 'target': 0,
+            'goals': 1, 'kpi': 1, 'metrics': 1,
+            'strategy': 2, 'plan': 2, 'execution': 2,
+            'data': 3, 'analytics': 3, 'research': 3,
+            'value': 4, 'brand': 4, 'positioning': 4,
+            'channels': 5, 'social media': 5, 'ads': 5, 'email': 5
+        };
+
+        function evaluateAdvice() {
+            const advice = document.getElementById('advice').value.toLowerCase();
+            if (!advice.trim()) return alert("Enter a strategy first!");
+            document.getElementById('result').classList.remove('hidden');
+
+            const scores = Array(categories.length).fill(20);
+            const strengths = new Set();
+            const improvements = new Set();
+
+            Object.entries(keywords).forEach(([keyword, index]) => {
+                if (advice.includes(keyword)) {
+                    scores[index] += 15;
+                    strengths.add(`Strong focus on ${categories[index]} (${keyword})`);
+                } else {
+                    improvements.add(`Consider improving ${categories[index]} (e.g., ${keyword})`);
+                }
+            });
+
+            const avgScore = Math.min(100, Math.round(scores.reduce((a, b) => a + b) / scores.length));
+            document.getElementById('overallScore').textContent = avgScore + "%";
+
+            document.getElementById('strengths').innerHTML = [...strengths].map(s => `<li>${s}</li>`).join('') || "<li>No strengths detected.</li>";
+            document.getElementById('improvements').innerHTML = [...improvements].map(i => `<li>${i}</li>`).join('') || "<li>No areas for improvement detected.</li>";
+
+            updateRadarChart(scores);
+        }
+
+        function updateRadarChart(scores) {
+            if (radarChart) {
+                radarChart.data.datasets[0].data = scores;
+                radarChart.update();
+            } else {
+                const ctx = document.getElementById('radarChart').getContext('2d');
+                radarChart = new Chart(ctx, {
+                    type: 'radar',
+                    data: {
+                        labels: categories,
+                        datasets: [{ data: scores, backgroundColor: 'rgba(79, 70, 229, 0.2)', borderColor: 'rgba(79, 70, 229, 0.8)', borderWidth: 2 }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: { r: { beginAtZero: true, max: 100, ticks: { display: false } } }
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>
